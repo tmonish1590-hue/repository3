@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Chess Against Computer</title>
+    
+    <!-- Visual styles for the game -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        #board {
+            width: 400px;
+            max-width: 90vw;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+
+    <!-- Visual Chessboard Stylesheet -->
+    <link rel="stylesheet" href="https://cloudflare.com">
+</head>
+<body>
+
+    <h1>Play Chess Against the Computer</h1>
+    <p>You play as White. Move a piece to start!</p>
+    
+    <!-- The Chessboard container -->
+    <div id="board"></div>
+
+    <!-- Required external engine libraries -->
+    <script src="https://jquery.com"></script>
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
+
+    <!-- Game Logic Engine -->
+    <script>
+        var board = null;
+        var game = new Chess();
+
+        function onDragStart(source, piece, position, orientation) {
+            // Block moves if game is over or if it's the computer's turn (Black)
+            if (game.game_over() || game.turn() === 'b') return false;
+
+            // Only allow the user to grab White pieces
+            if (piece.search(/^b/) !== -1) return false;
+        }
+
+        function makeRandomMove() {
+            var possibleMoves = game.moves();
+
+            // Exit if game is over
+            if (possibleMoves.length === 0) {
+                alert("Game Over!");
+                return;
+            }
+
+            // AI selects a random move
+            var randomIdx = Math.floor(Math.random() * possibleMoves.length);
+            game.move(possibleMoves[randomIdx]);
+            
+            // Refresh visual board
+            board.position(game.fen());
+        }
+
+        function onDrop(source, target) {
+            // Check if user's move is legal
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q' // Auto-promote to Queen for ease
+            });
+
+            // If move is illegal, snap piece back
+            if (move === null) return 'snapback';
+
+            // Wait a fraction of a second, then let the AI play
+            window.setTimeout(makeRandomMove, 250);
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        // Configure options
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd,
+            pieceTheme: 'https://chessboardjs.com{piece}.png'
+        };
+
+        // Fire up the board
+        board = Chessboard('board', config);
+    </script>
+</body>
+</html>
