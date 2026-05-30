@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Play Chess Against Computer</title>
     
-    <!-- Visual styles for the game -->
+    <!-- Official Stable Chessboard Layout Styles -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,89 +21,79 @@
         }
         #board {
             width: 400px;
-            max-width: 90vw;
+            max-width: 95vw;
             margin: 20px auto;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background-color: #e0e0e0;
+            min-height: 400px;
         }
     </style>
-
-    <!-- Visual Chessboard Stylesheet -->
-    <link rel="stylesheet" href="https://cloudflare.com">
 </head>
 <body>
 
     <h1>Play Chess Against the Computer</h1>
-    <p>You play as White. Move a piece to start!</p>
+    <p>You play as White. Drag and drop a piece to start!</p>
     
-    <!-- The Chessboard container -->
-    <div id="board"></div>
+    <!-- The Visual Chessboard Container -->
+    <div id="board">Loading chessboard layout...</div>
 
-    <!-- Required external engine libraries -->
-    <script src="https://jquery.com"></script>
-    <script src="https://cloudflare.com"></script>
-    <script src="https://cloudflare.com"></script>
+    <!-- Official, Secure JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
 
-    <!-- Game Logic Engine -->
+    <!-- Game Core Engine -->
     <script>
-        var board = null;
-        var game = new Chess();
+        // Double check that jQuery and Chessboard are loaded before building
+        $(document).ready(function() {
+            var board = null;
+            var game = new Chess();
 
-        function onDragStart(source, piece, position, orientation) {
-            // Block moves if game is over or if it's the computer's turn (Black)
-            if (game.game_over() || game.turn() === 'b') return false;
-
-            // Only allow the user to grab White pieces
-            if (piece.search(/^b/) !== -1) return false;
-        }
-
-        function makeRandomMove() {
-            var possibleMoves = game.moves();
-
-            // Exit if game is over
-            if (possibleMoves.length === 0) {
-                alert("Game Over!");
-                return;
+            function onDragStart(source, piece, position, orientation) {
+                if (game.game_over() || game.turn() === 'b') return false;
+                if (piece.search(/^b/) !== -1) return false;
             }
 
-            // AI selects a random move
-            var randomIdx = Math.floor(Math.random() * possibleMoves.length);
-            game.move(possibleMoves[randomIdx]);
-            
-            // Refresh visual board
-            board.position(game.fen());
-        }
+            function makeRandomMove() {
+                var possibleMoves = game.moves();
+                if (possibleMoves.length === 0) {
+                    alert("Game Over!");
+                    return;
+                }
+                var randomIdx = Math.floor(Math.random() * possibleMoves.length);
+                game.move(possibleMoves[randomIdx]);
+                board.position(game.fen());
+            }
 
-        function onDrop(source, target) {
-            // Check if user's move is legal
-            var move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q' // Auto-promote to Queen for ease
-            });
+            function onDrop(source, target) {
+                var move = game.move({
+                    from: source,
+                    to: target,
+                    promotion: 'q'
+                });
 
-            // If move is illegal, snap piece back
-            if (move === null) return 'snapback';
+                if (move === null) return 'snapback';
+                window.setTimeout(makeRandomMove, 250);
+            }
 
-            // Wait a fraction of a second, then let the AI play
-            window.setTimeout(makeRandomMove, 250);
-        }
+            function onSnapEnd() {
+                board.position(game.fen());
+            }
 
-        function onSnapEnd() {
-            board.position(game.fen());
-        }
+            var config = {
+                draggable: true,
+                position: 'start',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd,
+                // Uses stable image rendering vectors hosted directly by the author
+                pieceTheme: 'https://chessboardjs.com{piece}.png'
+            };
 
-        // Configure options
-        var config = {
-            draggable: true,
-            position: 'start',
-            onDragStart: onDragStart,
-            onDrop: onDrop,
-            onSnapEnd: onSnapEnd,
-            pieceTheme: 'https://chessboardjs.com{piece}.png'
-        };
-
-        // Fire up the board
-        board = Chessboard('board', config);
+            // Clear loading text and display the graphical board
+            $('#board').html('');
+            board = Chessboard('board', config);
+        });
     </script>
 </body>
 </html>
